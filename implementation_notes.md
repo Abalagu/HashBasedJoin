@@ -109,7 +109,8 @@ For aesthetics reasons, when relation is fully hashed, one may swap blocks to cl
    
 
 ## Mod function
-For the convenience of experiment, first use integer modular function as the hash function.  Since there are 14 buckets 
+For the convenience of experiment, first use integer modular function as the hash function.  After benchmarking, the integer modular function is sufficiently good for the given relation, and using either 13 buckets or 14 buckets will satisfy the constraint of the two-pass hash-based algorithm. 
+
 
 # Part 4: Join Algorithm
 When performing the two-pass hash-based algorithm on nature join, 14 blocks of memory is loaded with content of one hash bucket from the smaller relation, and the remaining one memory block is iteratively loaded with on-disk content of the same bucket index from the larger relation.   
@@ -117,6 +118,7 @@ When performing the two-pass hash-based algorithm on nature join, 14 blocks of m
 ## on output of join algorithm
 ref: note 22, page 65
 The output is not written back to disk.  The result may not need to be stored, and it is hard to estimate the output size, since it depends on the specific operation, not the algorithm used.   
+
 
 # Part 5: Experiment
 ## property of R(A, B)

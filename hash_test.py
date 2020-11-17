@@ -4,15 +4,8 @@ from math import ceil
 from typing import Tuple
 
 from experiment import init, init_relations
-from virtual_database import VirtualDatabase
+from virtual_database import VirtualDatabase, mod_hash
 from virtual_storage import VirtualDisk
-
-
-def mod_hash(key: int) -> int:
-    try:
-        return key % 14
-    except TypeError:
-        raise Exception("key: {}, type: {}".format(key, type(key)))
 
 
 def hash_function_benchmark(disk: VirtualDisk, db: VirtualDatabase, relation_name: str, bucket_size: int,
@@ -26,12 +19,15 @@ def hash_function_benchmark(disk: VirtualDisk, db: VirtualDatabase, relation_nam
     block_range = db.get_table(relation_name)['block_range']
 
     for i in range(num_trial):
+        db.hash_relation(db.get_table(relation_name), 1)
+
+    for i in range(num_trial):
         hash_values = []
         start, end = block_range[0], block_range[1] + 1
         for block_idx in range(start, end):
             block = disk.get_block(block_idx)
             data = block.read()
-            block_hash_values = [mod_hash(t[1]) for t in data]
+            block_hash_values = [mod_hash(t[1], bucket_size) for t in data]
             hash_values.extend(block_hash_values)
         else:
             count = Counter(hash_values)
@@ -44,7 +40,6 @@ def hash_function_benchmark(disk: VirtualDisk, db: VirtualDatabase, relation_nam
             else:
                 violated += 1
     else:
-
         print("bucket size: {}, met: {}, violated: {}".format(bucket_size, met, violated))
         return benchmark_log
 
@@ -53,7 +48,7 @@ relation_name = 'relation_r'
 for bucket_size in range(10, 16):
     disk, memory, db = init()
     init_relations(disk, db, 1)
-    print(disk.describe())
+    # print(disk.describe())
     print(db.describe_table(relation_name))
     benchmark_log = hash_function_benchmark(disk, db, relation_name, bucket_size, 100)
 
@@ -61,6 +56,6 @@ relation_name = 'relation_r'
 for bucket_size in range(10, 16):
     disk, memory, db = init()
     init_relations(disk, db, 2)
-    print(disk.describe())
+    # print(disk.describe())
     print(db.describe_table(relation_name))
     benchmark_log = hash_function_benchmark(disk, db, relation_name, bucket_size, 100)
