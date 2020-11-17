@@ -9,7 +9,10 @@ from virtual_storage import VirtualDisk
 
 
 def mod_hash(key: int) -> int:
-    return key % 14
+    try:
+        return key % 14
+    except TypeError:
+        raise Exception("key: {}, type: {}".format(key, type(key)))
 
 
 def hash_function_benchmark(disk: VirtualDisk, db: VirtualDatabase, relation_name: str, bucket_size: int,
@@ -46,16 +49,18 @@ def hash_function_benchmark(disk: VirtualDisk, db: VirtualDatabase, relation_nam
         return benchmark_log
 
 
-disk, memory, db = init()
-
-init_relations(disk, db, 1)
 relation_name = 'relation_r'
-print(db.describe_table(relation_name))
 for bucket_size in range(10, 16):
+    disk, memory, db = init()
+    init_relations(disk, db, 1)
+    print(disk.describe())
+    print(db.describe_table(relation_name))
     benchmark_log = hash_function_benchmark(disk, db, relation_name, bucket_size, 100)
 
-init_relations(disk, db, 2)
 relation_name = 'relation_r'
-print(db.describe_table(relation_name))
 for bucket_size in range(10, 16):
+    disk, memory, db = init()
+    init_relations(disk, db, 2)
+    print(disk.describe())
+    print(db.describe_table(relation_name))
     benchmark_log = hash_function_benchmark(disk, db, relation_name, bucket_size, 100)

@@ -6,9 +6,9 @@ from math import floor, ceil
 class Block:
     """minimal read and write unit"""
     max_tuple_per_block = 8
-    num_tuples = 0
 
     def __init__(self, data=None):
+        self.num_tuples = 0
         if data:
             self.write(data)
         else:
@@ -49,12 +49,20 @@ class Block:
 
 
 class VirtualDisk:
-    blocks: List[Block] = []
+    # blocks = []
     max_tuple_per_block = 8
-    num_blocks = 0
-    read_count, write_count = 0, 0
+
+    # TODO: it seems that defining self.blocks outside the init statement results in the same block
+    #  list every time a virtual disk instance is initialized, such that each time it writes to the previous disk.
+
+    # num_blocks = 0
+    # read_count, write_count = 0, 0
 
     def __init__(self, data: List[Tuple[int, str]] = None):
+        self.blocks: List[Block] = []
+        self.read_count = 0
+        self.write_count = 0
+        self.num_blocks = 0
         if data:
             self.append(data)
 
@@ -94,6 +102,10 @@ class VirtualDisk:
 
     def get_disk_io_stat(self):
         return self.read_count, self.write_count
+
+    def describe(self):
+        return "blocks used: {}, read count: {}, write count: {}".format(self.num_blocks, self.read_count,
+                                                                         self.write_count)
 
 
 class VirtualMemory:

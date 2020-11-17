@@ -136,3 +136,10 @@ total of 15 blocks
 1 for temporary storage of read from disk
 all the other 14 blocks may be used as hash buckets, which grants certain redundancy to unevenness of hash results.
 when a memory block is full, write it back to disk and clear the content within.
+
+
+# Python Relevant
+defining `self.blocks` for VirtualDisk class outside the init statement results in behavior that each disk instance writes to the same disk list.
+
+ref: https://stackoverflow.com/questions/1537202/difference-between-variables-inside-and-outside-of-init
+Variable set outside __init__ belong to the class. They're shared by all instances.
