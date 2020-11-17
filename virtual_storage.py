@@ -3,15 +3,6 @@ from typing import List, Tuple
 from math import floor, ceil
 
 
-class VirtualMemory:
-
-    def __init__(self, data):
-        self.data = data
-
-    def read(self):
-        return self.data
-
-
 class Block:
     """minimal read and write unit"""
     max_tuple_per_block = 8
@@ -46,6 +37,16 @@ class Block:
         else:
             return False
 
+    def is_empty(self):
+        if self.num_tuples == 0:
+            return True
+        else:
+            return False
+
+    def clear(self):
+        self.data = []
+        self.num_tuples = 0
+
 
 class VirtualDisk:
     blocks: List[Block] = []
@@ -70,9 +71,51 @@ class VirtualDisk:
         self.write_count += num_new_blocks
         return block_range
 
-    def read(self, idx):
+    def get_block(self, idx: int) -> Block:
+        if idx >= self.num_blocks:
+            raise Exception("request memory block index out of range.")
+        else:
+            return self.blocks[idx]
+
+    def read(self, idx: int) -> List[Tuple]:
+        """return content within memory block of the given index"""
+        block = self.get_block(idx)
         self.read_count += 1
-        return self.blocks[idx]
+        return block.read()
+
+    def write(self, data: List[Tuple], idx: int):
+        """write the given data to a memory block with given index"""
+        block = self.get_block(idx)
+        self.write_count += 1
+        block.write(data)
+
+    def clear(self, idx: int):
+        self.get_block(idx).clear()
 
     def get_disk_io_stat(self):
         return self.read_count, self.write_count
+
+
+class VirtualMemory:
+    """perform read, write, and hash functions"""
+
+    def __init__(self, size: int):
+        self.blocks = [Block() for _ in range(size)]
+        self.max_block_size = size
+
+    def get_block(self, idx: int) -> Block:
+        if idx >= self.max_block_size:
+            raise Exception("request memory block index out of range.")
+        else:
+            return self.blocks[idx]
+
+    def read(self, idx: int) -> List[Tuple]:
+        """return content within memory block of the given index"""
+        return self.get_block(idx).read()
+
+    def write(self, data: List[Tuple], idx: int):
+        """write the given data to a memory block with given index"""
+        self.get_block(idx).write(data)
+
+    def clear(self, idx: int):
+        self.get_block(idx).clear()

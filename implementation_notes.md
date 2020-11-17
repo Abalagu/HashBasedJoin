@@ -76,14 +76,63 @@ with replace: the sample return to the pool. the result may have duplicates
 without replace: the sample does not return to the pool, the result does not have duplicates, which is suitable for key values.
 
 
-
+Do I generate using virtual memory and virtual disk?
+1. Populate virtual memory with blocks of tuples to write to disk
+2. Call disk write procedure to transfer content from memory to disk
+3. return written block range 
 
 # Part 2: Virtual Disk I/O
 # Part 3: Hash Function
+A hash function is "good" for a relation if each resulting bucket size does not violate the block constraint, i.e., that it can fit into the memory.  In this sense, a hash function needs to be verified, and one cannot tell whether a given hash function is "good" in a general sense.   
+
+## general issues
+When hashing a large relation, one can only estimate the total tuple size for each bucket.  When performing hash in memory, if a memory bucket/block is full, then it needs to write back to disk.  If all the bucket blocks are to be stored continuously, then one needs to allocate a block range for each bucket.   
+Pre-allocation of bucket range on disk makes it ea
+
+Otherwise, when a memory bucket/block is full, it writes to the end of the disk, creating a new block.  In this case, the surrounding blocks may not belong to the same bucket, since each bucket is randomly filled.  Then there needs to be a memo on the index list of each bucket within the disk, such as:
+```python
+bucket_disk_idx = {
+    0:[0,2,4,8],
+    1:[1,3,5,7],
+    # ...
+}
+```   
+
+If a bucket index list exceeds memory block size, then it indicates that the chosen hash function is not good enough.  
+
+
+After hashing both relations, when performing join operation, read blocks from each index list.  Since block retains a minimal read/write unit, the performance is not hindered.
+For aesthetics reasons, when relation is fully hashed, one may swap blocks to cluster those belonging to the same bucket.  
+
+
+ 
+   
+
+## Mod function
+For the convenience of experiment, first use integer modular function as the hash function.  Since there are 14 buckets 
+
 # Part 4: Join Algorithm
+When performing the two-pass hash-based algorithm on nature join, 14 blocks of memory is loaded with content of one hash bucket from the smaller relation, and the remaining one memory block is iteratively loaded with on-disk content of the same bucket index from the larger relation.   
+
+## on output of join algorithm
+ref: note 22, page 65
+The output is not written back to disk.  The result may not need to be stored, and it is hard to estimate the output size, since it depends on the specific operation, not the algorithm used.   
+
 # Part 5: Experiment
 ## property of R(A, B)
 note that it is not mentioned whether B is a key of the relation R(A, B).  
 It is mentioned that A can be of any type.  For the ease of debugging, set A = 'A'+str(B+randint(1, 100)).
 For example, ['A123457', 123456], ['A123458', 123456], ['A123459', 123456] are all valid tuples for relation R.
 
+## two pass hash based algorithm constraint check
+### experiment 1
+R(A, B) has 1000 tuples, and is to be stored in 125 blocks.  
+S(B, C) has 5000 tuples, and is to be stored in 625 blocks.
+
+R is a smaller relation than S, and requires ceil(sqrt(125)) = 12 blocks of main memory to perform the two pass hash-based algorithm.  
+
+## memory block allocation
+total of 15 blocks
+1 for temporary storage of read from disk
+all the other 14 blocks may be used as hash buckets, which grants certain redundancy to unevenness of hash results.
+when a memory block is full, write it back to disk and clear the content within.
