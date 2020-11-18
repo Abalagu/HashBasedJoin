@@ -3,8 +3,7 @@ from collections import Counter
 from math import ceil
 
 from experiment import init, init_relations
-from virtual_database import VirtualDatabase, mod_hash
-from virtual_storage import VirtualDisk
+from virtual_database import VirtualDatabase
 
 
 def hash_function_benchmark(db: VirtualDatabase, relation_name: str, bucket_size: int, threshold: int = None,
@@ -17,13 +16,13 @@ def hash_function_benchmark(db: VirtualDatabase, relation_name: str, bucket_size
     """
     if not threshold:
         threshold = float('inf')
-    met, violated = 0, 0
+
     benchmark_log = []
     for i in range(num_trial):
         table = db.get_table(relation_name)
         tuples = db.table_to_memory(relation_name)
 
-        hash_values = [t[table.key_idx] % 14 for t in tuples]
+        hash_values = [t[table.key_idx] % bucket_size for t in tuples]
         counter = Counter(hash_values)
         # report the max block used
         max_block = ceil(max(counter.values()) / 8)

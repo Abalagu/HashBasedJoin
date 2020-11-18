@@ -6,6 +6,8 @@ from numpy.random import randint, choice
 from virtual_database import VirtualDatabase
 from virtual_storage import VirtualDisk, VirtualMemory
 
+from database_verify import init_pg_tables, relation_to_pg
+
 
 def init() -> Tuple[VirtualDisk, VirtualMemory, VirtualDatabase]:
     """return virtual disk, virtual memory, virtual database"""
@@ -18,7 +20,7 @@ def init() -> Tuple[VirtualDisk, VirtualMemory, VirtualDatabase]:
 def init_relations(disk: VirtualDisk, db: VirtualDatabase, experiment: int):
     s_b_range = range(10000, 50000)
     relation_s_size = 5000
-    s_b_values = choice(s_b_range, relation_s_size, replace=False)
+    s_b_values = choice(s_b_range, relation_s_size, replace=False).tolist()
     s_c_values = ['C' + str(value) for value in s_b_values]
     relation_s = [t for t in zip(s_b_values, s_c_values)]
     relation_s_block_range = disk.append(relation_s)
@@ -27,7 +29,7 @@ def init_relations(disk: VirtualDisk, db: VirtualDatabase, experiment: int):
     if experiment == 1:
         relation_r_size = 1000
         r_b_range = s_b_values
-        r_b_values = choice(r_b_range, relation_r_size, replace=True)
+        r_b_values = choice(r_b_range, relation_r_size, replace=True).tolist()
         r_a_values = ['A' + str(b + randint(1, 100)) for b in r_b_values]
         relation_r = [t for t in zip(r_a_values, r_b_values)]
         relation_r_block_range = disk.append(relation_r)
@@ -35,7 +37,7 @@ def init_relations(disk: VirtualDisk, db: VirtualDatabase, experiment: int):
     elif experiment == 2:
         relation_r_size = 1200
         r_b_range = range(20000, 30000)
-        r_b_values = choice(r_b_range, relation_r_size, replace=True)
+        r_b_values = choice(r_b_range, relation_r_size, replace=True).tolist()
         r_a_values = ['A' + str(b + randint(1, 100)) for b in r_b_values]
         relation_r = [t for t in zip(r_a_values, r_b_values)]
         relation_r_block_range = disk.append(relation_r)
@@ -49,7 +51,26 @@ def first_experiment():
     print("FIRST EXPERIMENT: ")
     disk, memory, db = init()
     init_relations(disk, db, 1)
-    print(db.get_tables())
+    table_name_1 = 'relation_r'
+    table_name_2 = 'relation_s'
+    table_1 = db.get_table(table_name_1)
+    table_2 = db.get_table(table_name_2)
+    ret = db.nature_join(table_1, table_2)
+
+    t2 = db.table_to_memory(table_name_2)
+    t2_keys = [t[table_2.key_idx] for t in t2]
+    selected_keys = choice(t2_keys, 20, False)
+    selected_print = {key: [] for key in selected_keys}
+
+    for key in selected_keys:
+        selected_print[key] = [t for t in ret if t[1] == key]
+    else:
+        print(selected_print)
+
+    init_pg_tables()
+    relation_to_pg(table_name_1, db.table_to_memory(table_name_1))
+    relation_to_pg(table_name_2, db.table_to_memory(table_name_2))
+    return selected_print
 
 
 def second_experiment():
@@ -57,9 +78,19 @@ def second_experiment():
     print("SECOND EXPERIMENT: ")
     disk, memory, db = init()
     init_relations(disk, db, 2)
-    print(db.get_tables())
+    table_name_1 = 'relation_r'
+    table_name_2 = 'relation_s'
+    table_1 = db.get_table(table_name_1)
+    table_2 = db.get_table(table_name_2)
+    ret = db.nature_join(table_1, table_2)
+    print("JOINED RESULTS: ")
+    print(ret)
+
+    init_pg_tables()
+    relation_to_pg(table_name_1, db.table_to_memory(table_name_1))
+    relation_to_pg(table_name_2, db.table_to_memory(table_name_2))
+    return ret
 
 
-if __name__ == '__main__':
-    first_experiment()
-    second_experiment()
+ret1 = first_experiment()
+ret2 = second_experiment()

@@ -1,6 +1,5 @@
 # Created by Luming on 11/15/2020 1:27 AM
-from math import ceil
-from typing import Dict, List, Tuple
+from typing import Dict, List, Tuple, Union
 
 from virtual_storage import VirtualMemory, VirtualDisk
 
@@ -14,7 +13,8 @@ def mod_hash(key: int, bucket_size: int) -> int:
 
 
 class Table:
-    def __init__(self, name: str, key_idx: int, disk_range: range = None, size: int = None, definition: str = None):
+    def __init__(self, name: str, key_idx: int, disk_range: Union[range, List] = None, size: int = None,
+                 definition: str = None):
         self.name: str = name
         self.key_idx: int = key_idx
         self.disk_range: range = disk_range
@@ -54,7 +54,7 @@ class VirtualDatabase:
         data = self.memory.read(memory_idx)
         self.disk.write(data, disk_idx)
 
-    def hash_relation(self, table: Table) -> Dict[int, range]:
+    def hash_relation(self, table: Table) -> Dict[int, List]:
         """hash relation into buckets stored in the disk, then return the block range
         assign the last memory block as temporary storage loading from disk
         all other blocks are for hash buckets
@@ -64,18 +64,18 @@ class VirtualDatabase:
 
         memory_temp_idx = self.memory.get_size() - 1
         bucket_size = self.memory.get_size() - 1
-        block_size_per_bucket = max(bucket_size, ceil(len(table.disk_range) / bucket_size))
+        # block_size_per_bucket = max(bucket_size, ceil(len(table.disk_range) / bucket_size))
         # block_size_per_bucket = ceil(len(table.disk_range) / bucket_size)
         # allocate free space within disks for all buckets, each bucket with bucket size of blocks
         # construct mapping between hash value and disk block for buckets
 
-        bucket_disk_ranges: Dict[int, range] = dict()
+        bucket_disk_ranges: Dict[int, List] = {bucket_idx: [] for bucket_idx in range(bucket_size)}
 
-        for bucket_idx in range(bucket_size):
-            bucket_disk_ranges[bucket_idx] = self.disk.allocate(block_size_per_bucket)
-        else:
-            bucket_disk_iterators = {bucket_idx: iter(bucket_idx_range) for bucket_idx, bucket_idx_range in
-                                     bucket_disk_ranges.items()}
+        # for bucket_idx in range(bucket_size):
+        #     bucket_disk_ranges[bucket_idx] = self.disk.allocate(block_size_per_bucket)
+        # else:
+        #     bucket_disk_iterators = {bucket_idx: iter(bucket_idx_range) for bucket_idx, bucket_idx_range in
+        #                              bucket_disk_ranges.items()}
 
         for disk_block_idx in table.disk_range:  # first pass, phase 1
             self.disk_to_memory(disk_block_idx, memory_temp_idx)
@@ -84,16 +84,20 @@ class VirtualDatabase:
                 bucket_idx = mod_hash(t[table.key_idx], bucket_size)
                 self.memory.extend([t], bucket_idx)
                 if self.memory.is_full(bucket_idx):
-                    self.memory_to_disk(bucket_idx, next(bucket_disk_iterators[bucket_idx]))
+                    disk_idx = self.disk.allocate(1)[0]
+                    self.memory_to_disk(bucket_idx, disk_idx)
                     self.memory.clear(bucket_idx)
+                    bucket_disk_ranges[bucket_idx].append(disk_idx)
             else:
                 self.memory.clear(memory_temp_idx)
         else:
             # transfer remaining in memory buckets to disk
             for bucket_idx in range(bucket_size):
                 if not self.memory.is_empty(bucket_idx):
-                    self.memory_to_disk(bucket_idx, next(bucket_disk_iterators[bucket_idx]))
+                    disk_idx = self.disk.allocate(1)[0]
+                    self.memory_to_disk(bucket_idx, disk_idx)
                     self.memory.clear(bucket_idx)
+                    bucket_disk_ranges[bucket_idx].append(disk_idx)
             else:
                 return bucket_disk_ranges
 
@@ -126,11 +130,8 @@ class VirtualDatabase:
                         if t_1[table_1.key_idx] == t_2[table_2.key_idx]:
                             # keep key in tuple 1 in nature joined result
                             result.append(t_1 + t_2[:table_2.key_idx] + t_2[table_2.key_idx + 1:])
-                    else:
-                        self.memory.clear(memory_idx_2)
-            else:
-                self.memory.clear(memory_idx_1)
         else:
+            self.memory.clear_all()
             return result
 
     def nature_join(self, table_1: Table, table_2: Table) -> List[Tuple]:
@@ -144,8 +145,8 @@ class VirtualDatabase:
         else:
             small_table, large_table = table_2, table_1
 
-        small_table_bucket_disk_ranges: Dict[int, range] = self.hash_relation(small_table)
-        large_table_bucket_disk_ranges: Dict[int, range] = self.hash_relation(large_table)
+        small_table_bucket_disk_ranges: Dict[int, List] = self.hash_relation(small_table)
+        large_table_bucket_disk_ranges: Dict[int, List] = self.hash_relation(large_table)
         joined_relation: List[Tuple] = []  # store joined relation within memory, outside virtual memory
 
         bucket_size = self.memory.get_size() - 1

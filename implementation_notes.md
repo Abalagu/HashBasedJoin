@@ -117,8 +117,7 @@ when testing, it occurs that for relation with 1000 tuples, i.e., 125 blocks, us
 relation s size: 5000, 5000/8 = 625 blocks, using 14 buckets, average bucket block usage=ceil(625/14)=ceil(44.6)=45,
 but the benchmark result reports that the max usage out of 100 trials is 47 blocks.  
 
-It's  
-
+Instead of hashing to pre-allocated blocks, allocate a new block when necessary.  This results in discontinuous on disk hash bucket blocks.   
 
 # Part 4: Join Algorithm
 When performing the two-pass hash-based algorithm on nature join, 14 blocks of memory is loaded with content of one hash bucket from the smaller relation, and the remaining one memory block is iteratively loaded with on-disk content of the same bucket index from the larger relation.   

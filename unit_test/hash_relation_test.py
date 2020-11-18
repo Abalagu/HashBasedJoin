@@ -10,6 +10,6 @@ table_name_2 = 'relation_s'
 table_1 = db.get_table(table_name_1)
 table_2 = db.get_table(table_name_2)
 
-# bucket_disk_ranges = db.hash_relation(table_1)
-
+bucket_disk_ranges_1 = db.hash_relation(table_1)
+bucket_disk_ranges_2 = db.hash_relation(table_2)
 ret = db.nature_join(table_1, table_2)
