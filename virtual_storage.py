@@ -79,12 +79,12 @@ class VirtualDisk:
         if data:
             self.append(data)
 
-    def append(self, data: List[Tuple]) -> Tuple[int, int]:
+    def append(self, data: List[Tuple]) -> range:
         """append the given content at the end of the current blocks, return the index range of the new blocks
         note that block range is left and right inclusive.
         """
         num_new_blocks = ceil(len(data) / self.max_tuple_per_block)
-        block_range = (self.get_disk_size(), self.get_disk_size() + num_new_blocks - 1)
+        block_range = range(self.get_disk_size(), self.get_disk_size() + num_new_blocks)
         new_blocks = [Block(data[i * self.max_tuple_per_block:(i + 1) * self.max_tuple_per_block])
                       for i in range(num_new_blocks)]
         self.__blocks.extend(new_blocks)

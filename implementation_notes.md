@@ -111,6 +111,14 @@ For aesthetics reasons, when relation is fully hashed, one may swap blocks to cl
 ## Mod function
 For the convenience of experiment, first use integer modular function as the hash function.  After benchmarking, the integer modular function is sufficiently good for the given relation, and using either 13 buckets or 14 buckets will satisfy the constraint of the two-pass hash-based algorithm. 
 
+when testing, it occurs that for relation with 1000 tuples, i.e., 125 blocks, using 14 buckets and assigning ceil(125/14)=ceil(8.9)=9 block on disk for each bucket may easily run out of block, as slight unevenness of key value distribution will cause trouble.  Therefore, certain redundancy needs to be granted, by allocating `max(num_buckets, ceil(table_block_size/num_buckets))` blocks for each bucket.  
+
+## relation s hash function
+relation s size: 5000, 5000/8 = 625 blocks, using 14 buckets, average bucket block usage=ceil(625/14)=ceil(44.6)=45,
+but the benchmark result reports that the max usage out of 100 trials is 47 blocks.  
+
+It's  
+
 
 # Part 4: Join Algorithm
 When performing the two-pass hash-based algorithm on nature join, 14 blocks of memory is loaded with content of one hash bucket from the smaller relation, and the remaining one memory block is iteratively loaded with on-disk content of the same bucket index from the larger relation.   

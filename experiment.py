@@ -22,7 +22,7 @@ def init_relations(disk: VirtualDisk, db: VirtualDatabase, experiment: int):
     s_c_values = ['C' + str(value) for value in s_b_values]
     relation_s = [t for t in zip(s_b_values, s_c_values)]
     relation_s_block_range = disk.append(relation_s)
-    db.add_table('relation_s', relation_s_block_range, relation_s_size)
+    db.add_table('relation_s', 0, relation_s_block_range, relation_s_size)
 
     if experiment == 1:
         relation_r_size = 1000
@@ -31,7 +31,7 @@ def init_relations(disk: VirtualDisk, db: VirtualDatabase, experiment: int):
         r_a_values = ['A' + str(b + randint(1, 100)) for b in r_b_values]
         relation_r = [t for t in zip(r_a_values, r_b_values)]
         relation_r_block_range = disk.append(relation_r)
-        db.add_table('relation_r', relation_r_block_range, relation_r_size)
+        db.add_table('relation_r', 1, relation_r_block_range, relation_r_size)
     elif experiment == 2:
         relation_r_size = 1200
         r_b_range = range(20000, 30000)
@@ -39,7 +39,7 @@ def init_relations(disk: VirtualDisk, db: VirtualDatabase, experiment: int):
         r_a_values = ['A' + str(b + randint(1, 100)) for b in r_b_values]
         relation_r = [t for t in zip(r_a_values, r_b_values)]
         relation_r_block_range = disk.append(relation_r)
-        db.add_table('relation_r', relation_r_block_range, relation_r_size)
+        db.add_table('relation_r', 1, relation_r_block_range, relation_r_size)
     else:
         raise Exception("unknown experiment param.")
 
