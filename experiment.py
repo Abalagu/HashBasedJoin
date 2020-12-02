@@ -52,11 +52,11 @@ def first_experiment():
     """generation relation S, and relation R with possible duplicate B values"""
     print("FIRST EXPERIMENT: ")
     disk, memory, db = init()
-    print('DISK USAGE AT INIT:')
+    print('AFTER INIT:')
     print(disk.describe())
 
     init_relations(disk, db, 1)
-    print('DISK USAGE AFTER CREATION:')
+    print('AFTER CREATION:')
     print(disk.describe())
 
     table_name_1 = 'relation_r'
@@ -64,7 +64,7 @@ def first_experiment():
     table_1 = db.get_table(table_name_1)
     table_2 = db.get_table(table_name_2)
     ret = db.nature_join(table_1, table_2)
-    print('DISK USAGE AFTER NATURE JOIN:')
+    print('AFTER NATURE JOIN:')
     print(disk.describe())
 
     t2 = db.table_to_memory(table_name_2)
@@ -88,7 +88,13 @@ def second_experiment():
     """generate relation S, and relation R with B values randomly picked within range 20000, 30000"""
     print("SECOND EXPERIMENT: ")
     disk, memory, db = init()
+    print('AFTER INIT:')
+    print(disk.describe())
+
     init_relations(disk, db, 2)
+    print('AFTER CREATION:')
+    print(disk.describe())
+
     table_name_1 = 'relation_r'
     table_name_2 = 'relation_s'
     table_1 = db.get_table(table_name_1)
@@ -96,10 +102,8 @@ def second_experiment():
     ret = db.nature_join(table_1, table_2)
     ret.sort(key=lambda x: x[1])
 
-    print('AFTER TWO PASS NATURE JOIN')
+    print('AFTER NATURE JOIN')
     print(disk.describe())
-    print("JOINED RESULTS: ")
-    print(ret)
 
     init_pg_tables()
 

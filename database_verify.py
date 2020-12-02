@@ -21,7 +21,7 @@ def init_pg_tables():
         cur.execute(f.read())
         conn.commit()
 
-    print("tables init.")
+    print("TABLES INIT.")
 
 
 def relation_to_pg(table_name: str, tuples: List[Tuple]):

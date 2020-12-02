@@ -45,3 +45,8 @@ for experiment_no in [1, 2]:
         max_block_usage = max(log)
         record = (experiment_no, bucket_size, max_block_usage)
         ret.append(record)
+
+for bucket_size in [12, 13, 14]:
+    average_block_size = 5000 / 8 / bucket_size
+    log = hash_function_benchmark(1, 'relation_s', bucket_size, None, 100)
+    print('average block size per bucket: {:.2f}, max block size per bucket: {}'.format(average_block_size, max(log)))
