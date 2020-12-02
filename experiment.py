@@ -34,6 +34,7 @@ def init_relations(disk: VirtualDisk, db: VirtualDatabase, experiment: int):
         relation_r = [t for t in zip(r_a_values, r_b_values)]
         relation_r_block_range = disk.append(relation_r)
         db.add_table('relation_r', 1, relation_r_block_range, relation_r_size)
+
     elif experiment == 2:
         relation_r_size = 1200
         r_b_range = range(20000, 30000)
@@ -42,6 +43,7 @@ def init_relations(disk: VirtualDisk, db: VirtualDatabase, experiment: int):
         relation_r = [t for t in zip(r_a_values, r_b_values)]
         relation_r_block_range = disk.append(relation_r)
         db.add_table('relation_r', 1, relation_r_block_range, relation_r_size)
+
     else:
         raise Exception("unknown experiment param.")
 
@@ -50,12 +52,20 @@ def first_experiment():
     """generation relation S, and relation R with possible duplicate B values"""
     print("FIRST EXPERIMENT: ")
     disk, memory, db = init()
+    print('DISK USAGE AT INIT:')
+    print(disk.describe())
+
     init_relations(disk, db, 1)
+    print('DISK USAGE AFTER CREATION:')
+    print(disk.describe())
+
     table_name_1 = 'relation_r'
     table_name_2 = 'relation_s'
     table_1 = db.get_table(table_name_1)
     table_2 = db.get_table(table_name_2)
     ret = db.nature_join(table_1, table_2)
+    print('DISK USAGE AFTER NATURE JOIN:')
+    print(disk.describe())
 
     t2 = db.table_to_memory(table_name_2)
     t2_keys = [t[table_2.key_idx] for t in t2]
@@ -70,6 +80,7 @@ def first_experiment():
     init_pg_tables()
     relation_to_pg(table_name_1, db.table_to_memory(table_name_1))
     relation_to_pg(table_name_2, db.table_to_memory(table_name_2))
+    print('R(A,B), S(B,C), AND JOIN RESULTS WRITTEN TO DATABASE')
     return selected_print
 
 
@@ -83,14 +94,18 @@ def second_experiment():
     table_1 = db.get_table(table_name_1)
     table_2 = db.get_table(table_name_2)
     ret = db.nature_join(table_1, table_2)
+    ret.sort(key=lambda x: x[1])
+
+    print('AFTER TWO PASS NATURE JOIN')
+    print(disk.describe())
     print("JOINED RESULTS: ")
     print(ret)
 
     init_pg_tables()
+
     relation_to_pg(table_name_1, db.table_to_memory(table_name_1))
     relation_to_pg(table_name_2, db.table_to_memory(table_name_2))
+    print('R(A,B), S(B,C), AND JOIN RESULTS WRITTEN TO DATABASE')
     return ret
 
-
-ret1 = first_experiment()
-ret2 = second_experiment()
+# note that one experiment overrides the other for the table content within the database

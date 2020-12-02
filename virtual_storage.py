@@ -62,20 +62,13 @@ class MemoryBlock(Block):
 
 
 class VirtualDisk:
-    # blocks = []
     max_tuple_per_block = 8
-
-    # TODO: it seems that defining self.blocks outside the init statement results in the same block
-    #  list every time a virtual disk instance is initialized, such that each time it writes to the previous disk.
-
-    # num_blocks = 0
-    # read_count, write_count = 0, 0
 
     def __init__(self, data: List[Tuple[int, str]] = None):
         self.__blocks: List[Block] = []
         self.__read_count = 0
         self.__write_count = 0
-        # self.num_blocks = 0
+
         if data:
             self.append(data)
 
@@ -127,7 +120,7 @@ class VirtualDisk:
         return self.__read_count, self.__write_count
 
     def describe(self):
-        return "blocks used: {}, read count: {}, write count: {}".format(self.get_disk_size(), self.__read_count,
+        return "blocks used: {}, read count: {}, write count: {}\n".format(self.get_disk_size(), self.__read_count,
                                                                          self.__write_count)
 
 

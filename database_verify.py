@@ -34,5 +34,6 @@ def relation_to_pg(table_name: str, tuples: List[Tuple]):
     else:
         conn.commit()
 
+
 if __name__ == '__main__':
     init_pg_tables()

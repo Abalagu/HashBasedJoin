@@ -6,7 +6,7 @@ from experiment import init, init_relations
 from virtual_database import VirtualDatabase
 
 
-def hash_function_benchmark(db: VirtualDatabase, relation_name: str, bucket_size: int, threshold: int = None,
+def hash_function_benchmark(experiment_no: int, relation_name: str, bucket_size: int, threshold: int = None,
                             num_trial: int = 100):
     """benchmark a given hash function.
     two-pass hash-based algorithm requires that content in each bucket does not exceed the number of memory blocks.
@@ -17,8 +17,10 @@ def hash_function_benchmark(db: VirtualDatabase, relation_name: str, bucket_size
     if not threshold:
         threshold = float('inf')
 
+    disk, memory, db = init()
     benchmark_log = []
     for i in range(num_trial):
+        init_relations(disk, db, experiment_no)
         table = db.get_table(relation_name)
         tuples = db.table_to_memory(relation_name)
 
@@ -30,41 +32,16 @@ def hash_function_benchmark(db: VirtualDatabase, relation_name: str, bucket_size
     else:
         if threshold:
             constraint_met = [block <= threshold for block in benchmark_log]
-            print("constraint: {} blocks.  met:violated = {}:{}"
-                  .format(threshold, sum(constraint_met), num_trial - sum(constraint_met)))
+            print("experiment {}, bucket size: {} blocks.  max block usage: {}, met:violated = {}:{}"
+                  .format(experiment_no, bucket_size, max(benchmark_log), sum(constraint_met),
+                          num_trial - sum(constraint_met)))
         return benchmark_log
-    #
-    # for i in range(num_trial):
-    #     bucket_disk_ranges = db.hash_relation(db.get_table(relation_name))
-    #     benchmark_log.append(bucket_disk_ranges)
-    #     max_block_range = max([len(bucket_range) for bucket_range in bucket_disk_ranges.values()])
-    #     if max_block_range <= threshold:
-    #         met += 1
-    #     else:
-    #         violated += 1
-    # else:
-    #     print("bucket size: {}, met: {}, violated: {}".format(bucket_size, met, violated))
-    #     return benchmark_log
 
 
-# relation_name = 'relation_r'
-# for bucket_size in range(10, 16):
-#     disk, memory, db = init()
-#     init_relations(disk, db, 1)
-#     # print(disk.describe())
-#     # print(db.describe_table(relation_name))
-#     benchmark_log = hash_function_benchmark(db, relation_name, bucket_size, bucket_size, 100)
-#
-# relation_name = 'relation_r'
-# benchmark_log = dict()
-# for bucket_size in range(10, 16):
-#     disk, memory, db = init()
-#     init_relations(disk, db, 2)
-#     # print(disk.describe())
-#     # print(db.describe_table(relation_name))
-#     benchmark_log[bucket_size] = hash_function_benchmark(db, relation_name, bucket_size, bucket_size, 100)
-
-disk, memory, db = init()
-init_relations(disk, db, 1)
-bucket_size = 14
-log = hash_function_benchmark(db, 'relation_s', bucket_size, None, 100)
+ret = []
+for experiment_no in [1, 2]:
+    for bucket_size in [12, 13, 14]:
+        log = hash_function_benchmark(experiment_no, 'relation_r', bucket_size, bucket_size, 100)
+        max_block_usage = max(log)
+        record = (experiment_no, bucket_size, max_block_usage)
+        ret.append(record)
